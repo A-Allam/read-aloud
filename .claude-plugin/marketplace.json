@@ -1,0 +1,14 @@
+{
+  "name": "aliallam",
+  "owner": {
+    "name": "Ali Allam"
+  },
+  "plugins": [
+    {
+      "name": "read-aloud",
+      "source": "./plugins/read-aloud",
+      "description": "Reads every Claude Code reply aloud using your OS voice. Zero dependencies."
+    }
+  ],
+  "description": "Ali Allam's Claude Code plugins"
+}

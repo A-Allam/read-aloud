@@ -1,0 +1,8 @@
+{
+  "name": "read-aloud",
+  "displayName": "Read Aloud",
+  "description": "Reads every Claude Code reply aloud using your OS voice (macOS say, Linux espeak-ng, Windows SAPI). Zero dependencies. /read-aloud:mute to pause.",
+  "version": "1.0.0",
+  "author": { "name": "Ali Allam" },
+  "keywords": ["tts", "text-to-speech", "accessibility", "voice", "hooks"]
+}
