@@ -1,51 +1,69 @@
 # read-aloud 🔊
 
-A Claude Code plugin that **reads every reply aloud** using the voice already on your machine. Send a prompt, look away, and listen.
+A Claude Code plugin that **reads every reply aloud**. Send a prompt, look away, and listen.
 
+- **Natural voices** — Gemini voices from Google AI Studio (Kore, Puck, Charon, Sulafat… 30 voices), with Egyptian and Standard Arabic support
+- **Works with no setup** — without an API key it uses your computer's built-in voice
+- **Full control** — read on demand, stop, pause, resume, mute
+- **Never blocks** — runs in the background; a new reply replaces the old one
+- **Speech-friendly** — skips code blocks, strips markdown, says filenames instead of full paths
 - **Zero dependencies** — runs on the Node that ships with Claude Code
-- **Uses the OS voice** — macOS `say`, Linux `espeak-ng`, Windows SAPI
-- **Never blocks** — runs in the background; a new reply interrupts the old one
-- **Speech-friendly** — strips markdown, says "code block" instead of reading code, reads filenames instead of full paths
-- **Arabic-aware** — mostly-Arabic replies switch to an Arabic voice automatically
 
 ## Install
 
-Inside any Claude Code session:
+Inside Claude Code, run these **one at a time**:
 
 ```
 /plugin marketplace add A-Allam/read-aloud
+```
+```
 /plugin install read-aloud@aliallam
 ```
 
-Or from your shell:
+Then restart Claude Code (or run `/reload-plugins`). The next reply is read aloud.
 
-```bash
-claude plugin marketplace add A-Allam/read-aloud
-claude plugin install read-aloud@aliallam
-```
+> If the add step fails on a machine without a GitHub SSH key, use `https://github.com/A-Allam/read-aloud.git` instead.
 
-Restart Claude Code. The next reply is read aloud.
+## Use Gemini voices (recommended)
 
-**Linux only:** install a voice engine first — `sudo apt install espeak-ng` (or `brew install espeak-ng`, `pacman -S espeak-ng`). macOS and Windows need nothing.
+1. Get a free API key at **[aistudio.google.com/apikey](https://aistudio.google.com/apikey)**.
+2. Give it to the plugin — any one of these:
+   - the install dialog asks for it (or run `/plugin configure read-aloud@aliallam`)
+   - add `export GEMINI_API_KEY=your-key` to `~/.zshrc` / `~/.bashrc`
+   - run `/read-aloud:config set my gemini key to …`
+3. Pick a voice and style: `/read-aloud:config use Sulafat, calm and warm`
+
+Run `/read-aloud:status` to check which voice engine is active and see the last error, if any. If Gemini fails (no network, bad key, quota), it falls back to the system voice automatically.
 
 ## Commands
 
 | Command | What it does |
 | :-- | :-- |
-| `/read-aloud:mute` | Stop reading aloud (until unmuted) |
-| `/read-aloud:unmute` | Resume |
-| `/read-aloud:config faster` | Change rate, voice, or max length in plain words |
+| `/read-aloud:read` | Read the last reply aloud (works even when muted) |
+| `/read-aloud:stop` | Stop reading now |
+| `/read-aloud:pause` | Pause (macOS / Linux) |
+| `/read-aloud:resume` | Continue from where it paused |
+| `/read-aloud:mute` | Stop auto-reading — replies are still saved for `/read-aloud:read` |
+| `/read-aloud:unmute` | Auto-read every reply again |
+| `/read-aloud:status` | Voice engine, settings, last error |
+| `/read-aloud:config …` | Change voice, style, speed, key — in plain words |
 
-Mute also works from outside Claude: `touch ~/.claude/read-aloud.mute` / `rm ~/.claude/read-aloud.mute`.
+**Read only when you ask:** run `/read-aloud:mute` once, then `/read-aloud:read` whenever you want to hear a reply.
+
+Replaying a reply with `/read-aloud:read` reuses the saved audio, so it doesn't cost another Gemini call.
 
 ## Settings
 
-Optional file at `~/.claude/read-aloud.json`:
+`~/.claude/read-aloud/config.json` (all optional):
 
 ```json
 {
+  "engine": "auto",
+  "geminiVoice": "Kore",
+  "style": "Natural and relaxed, like a colleague explaining their work",
+  "geminiModel": "gemini-3.8-flash-tts",
+  "voice": null,
   "rate": 200,
-  "voice": "Samantha",
   "arabicVoice": "Majed",
   "maxChars": 1800
 }
@@ -53,22 +71,28 @@ Optional file at `~/.claude/read-aloud.json`:
 
 | Key | Default | Notes |
 | :-- | :-- | :-- |
-| `rate` | `200` | Words per minute |
-| `voice` | OS default | macOS: `say -v ?` lists voices · Linux: `espeak-ng --voices` · Windows: installed SAPI voice name |
-| `arabicVoice` | `Majed` | macOS voice used when a reply is mostly Arabic |
-| `maxChars` | `1800` | Longer replies are cut at a sentence boundary with "response truncated" |
+| `engine` | `auto` | `auto` = Gemini when a key is set, else system voice · `gemini` · `system` |
+| `geminiVoice` | `Kore` | Any of the 30 Gemini voices — `/read-aloud:config` lists them |
+| `style` | natural, relaxed | How to speak, in plain words: `"fast and energetic"`, `"Egyptian Arabic accent"` |
+| `geminiModel` | `gemini-3.8-flash-tts` | `gemini-3.8-flash-lite-tts` starts faster |
+| `geminiApiKey` | — | Prefer the `GEMINI_API_KEY` env var so the key isn't in a file |
+| `voice` / `rate` | OS default / 200 | System voice name and words per minute |
+| `arabicVoice` | `Majed` | macOS system voice for mostly-Arabic replies |
+| `maxChars` | `1800` | Longer replies are cut at a sentence boundary |
 
-Environment variables `CLAUDE_SPEAK_RATE`, `CLAUDE_SPEAK_VOICE`, `CLAUDE_SPEAK_MAX` override the file. Changes apply on the next reply — no restart.
+## Requirements
+
+- **macOS:** nothing extra.
+- **Windows:** nothing extra (pause isn't supported on Windows).
+- **Linux:** a player for Gemini audio (`paplay`, `aplay`, `pw-play` or `ffplay`) and `espeak-ng` for the fallback voice: `sudo apt install espeak-ng pulseaudio-utils`.
+
+## Privacy
+
+With the system voice, nothing leaves your machine. With Gemini, each reply's text (after code blocks are removed) is sent to Google's Gemini API to generate the audio.
 
 ## How it works
 
-Claude Code fires a `Stop` hook when a reply finishes and passes the final text as `last_assistant_message`. This plugin registers one async command hook on that event: [`scripts/speak.js`](plugins/read-aloud/scripts/speak.js) cleans the markdown and hands the text to the system TTS, detached, so the terminal is never waiting on audio.
-
-Nothing is sent anywhere. The text never leaves your machine.
-
-## Want a better voice?
-
-The built-in voices are fine for skimming; for something nicer, `speak()` in `speak.js` is the one place to swap in [Piper](https://github.com/rhasspy/piper), `edge-tts`, or an API voice. PRs welcome.
+Claude Code fires a `Stop` hook when a reply finishes, with the final text as `last_assistant_message`. [`scripts/speak.js`](plugins/read-aloud/scripts/speak.js) cleans the markdown, saves it, and starts a background worker that fetches Gemini audio (or uses the OS voice) and plays it. The worker runs in its own process group, which is how stop, pause and resume work.
 
 ## License
 

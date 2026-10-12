@@ -7,7 +7,7 @@
     {
       "name": "read-aloud",
       "source": "./plugins/read-aloud",
-      "description": "Reads every Claude Code reply aloud using your OS voice. Zero dependencies."
+      "description": "Reads every Claude Code reply aloud with natural Gemini voices or your OS voice."
     }
   ],
   "description": "Ali Allam's Claude Code plugins"

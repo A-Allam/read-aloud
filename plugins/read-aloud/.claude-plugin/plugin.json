@@ -1,8 +1,19 @@
 {
   "name": "read-aloud",
   "displayName": "Read Aloud",
-  "description": "Reads every Claude Code reply aloud using your OS voice (macOS say, Linux espeak-ng, Windows SAPI). Zero dependencies. /read-aloud:mute to pause.",
-  "version": "1.0.0",
+  "description": "Reads every Claude Code reply aloud. Natural Gemini voices (Google AI Studio) with your OS voice as a free fallback. /read-aloud:read, :stop, :pause, :resume, :mute.",
+  "version": "1.1.0",
   "author": { "name": "Ali Allam" },
-  "keywords": ["tts", "text-to-speech", "accessibility", "voice", "hooks"]
+  "homepage": "https://github.com/A-Allam/read-aloud",
+  "repository": "https://github.com/A-Allam/read-aloud",
+  "license": "MIT",
+  "keywords": ["tts", "text-to-speech", "gemini", "accessibility", "voice", "hooks"],
+  "userConfig": {
+    "gemini_api_key": {
+      "type": "string",
+      "title": "Gemini API key (optional)",
+      "description": "For natural Google AI Studio voices. Get a key at aistudio.google.com/apikey. Leave empty to use your system voice.",
+      "sensitive": true
+    }
+  }
 }
